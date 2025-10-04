@@ -10,7 +10,6 @@ import {
   FieldLabel,
   FieldDescription,
   FieldGroup,
-  FieldSeparator,
 } from "@/components/ui/field";
 
 export function LoginForm({
@@ -46,9 +45,9 @@ export function LoginForm({
         <div className='flex justify-center gap-2 md:justify-start'>
           <a href='#' className='flex items-center gap-2 font-medium'>
             <div className='bg-primary text-primary-foreground flex items-center justify-center rounded-md'>
-              <img src='./favicon.ico' className='w-10 h-10' />
+              <img src='./favicon.ico' className='w-8 h-8' />
             </div>
-            Masst Sign.
+            Masst Sign
           </a>
         </div>
         <div className='flex flex-1 items-center justify-center'>
@@ -59,8 +58,8 @@ export function LoginForm({
               {...props}
             >
               <FieldGroup>
-                <div className='flex flex-col items-center gap-1 text-center'>
-                  <h1 className='text-2xl font-bold'>Login to your account</h1>
+                <div className='flex flex-col items-center gap-6 text-center'>
+                  <h1 className='text-2xl font-bold'>Login</h1>
                   <p className='text-sm text-muted-foreground'>
                     Enter your email below to login to your account
                   </p>
@@ -102,7 +101,6 @@ export function LoginForm({
                 {error && (
                   <p className='text-red-500 text-sm text-center'>{error}</p>
                 )}
-                <FieldSeparator />
                 <Field>
                   <FieldDescription className='text-center text-sm'>
                     Don't have an account?{" "}
