@@ -1,8 +1,12 @@
 import api from "../lib/api";
 
 export interface AuthResponse {
-  access_token: string;
-  user?: any;
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    role: "UPLOADER" | "SIGNER";
+  };
 }
 
 export interface LoginPayload {

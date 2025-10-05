@@ -1,4 +1,5 @@
 "use client";
+
 import { createContext, useContext, useState, useEffect } from "react";
 import {
   loginService,
@@ -7,8 +8,17 @@ import {
   RegisterPayload,
 } from "src/services/auth.service";
 
+export type Role = "UPLOADER" | "SIGNER";
+
+interface User {
+  id: number;
+  email: string;
+  role: Role;
+}
+
 interface AuthContextType {
   token: string | null;
+  user: User | null;
   setToken: (token: string | null) => void;
   login: (data: LoginPayload) => Promise<void>;
   register: (data: RegisterPayload) => Promise<void>;
@@ -21,12 +31,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load token & user from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("token");
-    if (stored) setToken(stored);
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken) {
+      setToken(storedToken);
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          localStorage.removeItem("user");
+        }
+      }
+    }
   }, []);
 
   const login = async (data: LoginPayload) => {
@@ -34,8 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const res = await loginService(data);
-      localStorage.setItem("token", res.access_token);
-      setToken(res.access_token);
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      setToken(res.token);
+      setUser(res.user);
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -48,8 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const res = await registerService(data);
-      localStorage.setItem("token", res.access_token);
-      setToken(res.access_token);
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      setToken(res.token);
+      setUser(res.user);
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
@@ -59,12 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
+    setUser(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ token, setToken, login, register, logout, loading, error }}
+      value={{ token, user, setToken, login, register, logout, loading, error }}
     >
       {children}
     </AuthContext.Provider>

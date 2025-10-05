@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,31 +12,30 @@ import {
   FieldDescription,
   FieldGroup,
 } from "@/components/ui/field";
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useLogin } from "src/hooks/useLogin";
+import { useAuth } from "src/context/AuthContext";
 
 export default function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { login, loading, error } = useAuth();
   const router = useRouter();
 
-  const { mutate: login, isPending, error } = useLogin();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(
-      { email, password },
-      {
-        onSuccess: () => {
-          router.push("/dashboard");
-        },
-      }
-    );
+    setFormError(null);
+
+    try {
+      await login({ email, password });
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Login failed", err);
+      setFormError(err.response?.data?.message || "Login failed");
+    }
   };
 
   return (
@@ -95,14 +97,14 @@ export default function LoginForm({
                 </Field>
 
                 <Field>
-                  <Button type='submit' disabled={isPending}>
-                    {isPending ? "Logging in..." : "Login"}
+                  <Button type='submit' disabled={loading}>
+                    {loading ? "Logging in..." : "Login"}
                   </Button>
                 </Field>
 
-                {error && (
+                {(error || formError) && (
                   <p className='text-red-500 text-sm text-center'>
-                    {(error as any)?.response?.data?.message || "Login failed"}
+                    {formError || error}
                   </p>
                 )}
 

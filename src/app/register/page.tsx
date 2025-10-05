@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,32 +19,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useRegister } from "src/hooks/useRegister";
+import { useAuth } from "src/context/AuthContext";
 
 export default function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const { register, loading, error } = useAuth();
   const router = useRouter();
 
-  const { mutate: register, isPending, error } = useRegister();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"UPLOADER" | "SIGNER" | "">("");
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    register(
-      { email, password, role },
-      {
-        onSuccess: () => {
-          router.push("/dashboard");
-        },
-      }
-    );
+    setFormError(null);
+
+    if (!role) {
+      setFormError("Please select a role");
+      return;
+    }
+
+    try {
+      await register({ email, password, role });
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Registration failed", err);
+      setFormError(err.response?.data?.message || "Registration failed");
+    }
   };
 
   return (
@@ -85,7 +92,12 @@ export default function RegisterForm({
 
                 <Field>
                   <FieldLabel htmlFor='role'>Role</FieldLabel>
-                  <Select onValueChange={(val) => setRole(val)} value={role}>
+                  <Select
+                    onValueChange={(val) =>
+                      setRole(val as "UPLOADER" | "SIGNER")
+                    }
+                    value={role}
+                  >
                     <SelectTrigger id='role'>
                       <SelectValue placeholder='Select your role' />
                     </SelectTrigger>
@@ -108,15 +120,14 @@ export default function RegisterForm({
                 </Field>
 
                 <Field>
-                  <Button type='submit' disabled={isPending}>
-                    {isPending ? "Registering..." : "Register"}
+                  <Button type='submit' disabled={loading}>
+                    {loading ? "Registering..." : "Register"}
                   </Button>
                 </Field>
 
-                {error && (
+                {(error || formError) && (
                   <p className='text-red-500 text-sm text-center'>
-                    {(error as any)?.response?.data?.message ||
-                      "Register failed"}
+                    {formError || error}
                   </p>
                 )}
 
