@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/field";
 import Link from "next/link";
 
-export default function LoginForm({
+export default function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
@@ -28,13 +28,13 @@ export default function LoginForm({
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:3000/auth/login", {
+      const res = await axios.post("http://localhost:3000/auth/register", {
         email,
         password,
       });
       localStorage.setItem("token", res.data.access_token);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Register failed");
     } finally {
       setLoading(false);
     }
@@ -60,9 +60,9 @@ export default function LoginForm({
             >
               <FieldGroup>
                 <div className='flex flex-col items-center gap-6 text-center'>
-                  <h1 className='text-2xl font-bold'>Login</h1>
+                  <h1 className='text-2xl font-bold'>Register</h1>
                   <p className='text-sm text-muted-foreground'>
-                    Enter your email below to login to your account
+                    Enter your email below to register your account
                   </p>
                 </div>
                 <Field>
@@ -96,7 +96,7 @@ export default function LoginForm({
                 </Field>
                 <Field>
                   <Button type='submit' disabled={loading}>
-                    {loading ? "Logging in..." : "Login"}
+                    {loading ? "Logging in..." : "Register"}
                   </Button>
                 </Field>
                 {error && (
@@ -104,12 +104,12 @@ export default function LoginForm({
                 )}
                 <Field>
                   <FieldDescription className='text-center text-sm'>
-                    Don't have an account?{" "}
+                    Already have an account?{" "}
                     <Link
-                      href='/register'
+                      href='/login'
                       className='underline underline-offset-4'
                     >
-                      Sign up
+                      Login
                     </Link>
                   </FieldDescription>
                 </Field>
