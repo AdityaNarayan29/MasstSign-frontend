@@ -111,7 +111,7 @@ export default function LoginForm({
                     Don't have an account?{" "}
                     <Link
                       href='/register'
-                      className='underline underline-offset-4'
+                      className='underline underline-offset-4 hover:text-primary'
                     >
                       Sign up
                     </Link>
@@ -123,13 +123,13 @@ export default function LoginForm({
         </div>
       </div>
 
-      <div className='bg-muted relative hidden lg:flex items-center justify-center'>
+      <div className='bg-black relative hidden lg:flex items-center justify-center overflow-hidden'>
         <img
           src='./side.png'
           alt='Side'
           className='w-max h-max object-contain'
         />
-        <div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/70 via-black/0 to-black/60 rounded-lg' />
+        <div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/70 via-black/0 to-black/70' />
       </div>
     </div>
   );

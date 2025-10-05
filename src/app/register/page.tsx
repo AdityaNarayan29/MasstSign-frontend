@@ -38,7 +38,7 @@ export default function RegisterForm({
       { email, password, role },
       {
         onSuccess: () => {
-          router.push("/dashboard"); // redirect after successful registration
+          router.push("/dashboard");
         },
       }
     );
@@ -137,13 +137,13 @@ export default function RegisterForm({
         </div>
       </div>
 
-      <div className='bg-muted relative hidden lg:flex items-center justify-center'>
+      <div className='bg-black relative hidden lg:flex items-center justify-center overflow-hidden'>
         <img
           src='./side.png'
-          alt='Image'
+          alt='Side'
           className='w-max h-max object-contain'
         />
-        <div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/70 via-black/0 to-black/60 rounded-lg'></div>
+        <div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/70 via-black/0 to-black/70' />
       </div>
     </div>
   );

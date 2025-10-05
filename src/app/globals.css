@@ -1,17 +1,32 @@
-/* eslint-disable */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@keyframes shine {
-  0% {
-    left: -50%;
-  }
-  100% {
-    left: 100%;
-  }
+:root {
+  --background: 0 0% 100%;         
+  --foreground: 0 0% 0%;           
+  --popover: 0 0% 100%;           
+  --popover-foreground: 0 0% 0%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --border: 0 0% 90%;
+  --input: 0 0% 95%;
+  --ring: 215 20% 65%;
+  --primary: 220 90% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 50% 60%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 16% 82%;
+  --muted-foreground: 215 20% 30%;
+  --accent: 210 50% 60%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 78% 63%;
+  --destructive-foreground: 0 0% 100%;
 }
 
-.animate-shine > div {
-  animation: shine 2s infinite;
+.dark {
+  --background: 210 30% 8%;
+  --foreground: 0 0% 100%;
+  --popover: 210 30% 12%;
+  --popover-foreground: 0 0% 100%;
 }
