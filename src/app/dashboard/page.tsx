@@ -5,20 +5,30 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
-interface ApiUser {
-  sub: string;
-  email: string;
-  role: "UPLOADER" | "SIGNER";
+interface Document {
+  id: number;
+  fileUrl: string;
+  status: "PENDING" | "SIGNED" | "VERIFIED" | "REJECTED";
+  signer?: { email: string };
+  uploader?: { email: string };
+  signatures?: { signatureUrl: string; signedAt: string }[];
 }
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
-  const [apiUser, setApiUser] = useState<ApiUser | null>(null);
+  const [docs, setDocs] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const role = user?.role ?? "Guest";
+
   useEffect(() => {
-    const verifyAuth = async () => {
+    const fetchDocuments = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem("token");
       if (!token) {
         setLoading(false);
@@ -26,30 +36,37 @@ export default function DashboardPage() {
       }
 
       try {
-        const res = await fetch("/api/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        let res: Response;
 
-        if (!res.ok) {
-          setApiUser(null);
+        if (role === "UPLOADER") {
+          res = await fetch("/documents/uploaded", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else if (role === "SIGNER") {
+          res = await fetch("/documents/assigned", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
         } else {
-          const data = await res.json();
-          setApiUser(data.user);
+          setDocs([]);
+          return;
         }
-      } catch (error) {
-        console.error("[Dashboard] /api/me error:", error);
-        setApiUser(null);
+
+        if (res.ok) {
+          const data = await res.json();
+          setDocs(data);
+        } else {
+          setDocs([]);
+        }
+      } catch (err) {
+        console.error("[Dashboard] Error fetching documents:", err);
+        setDocs([]);
       } finally {
         setLoading(false);
       }
     };
 
-    verifyAuth();
-  }, []);
-
-  const role = apiUser?.role ?? user?.role ?? "Guest";
+    fetchDocuments();
+  }, [user, role]);
 
   if (loading) {
     return (
@@ -64,11 +81,9 @@ export default function DashboardPage() {
       <div className='max-w-5xl mx-auto space-y-6'>
         <header className='flex items-center justify-between'>
           <h1 className='text-3xl font-bold'>Dashboard</h1>
-          {apiUser || user ? (
+          {user ? (
             <div className='flex items-center gap-4'>
-              <span className='text-gray-700'>
-                Hello, {apiUser?.email || user?.email}
-              </span>
+              <span className='text-gray-700'>Hello, {user.email}</span>
               <Button variant='outline' onClick={logout}>
                 Logout
               </Button>
@@ -90,27 +105,62 @@ export default function DashboardPage() {
         </section>
 
         <section className='bg-white p-6 rounded-lg shadow-md'>
-          <h3 className='text-lg font-semibold mb-2'>Quick Actions</h3>
-          <div className='space-y-2'>
-            {role === "UPLOADER" && (
-              <Button onClick={() => router.push("/uploader")}>
-                Go to Upload Page
-              </Button>
-            )}
-            {role === "SIGNER" && (
-              <Button onClick={() => router.push("/signer")}>
-                Go to Signer Page
-              </Button>
-            )}
-            {role === "Guest" && (
-              <Button disabled>Login to access features</Button>
-            )}
-          </div>
-        </section>
-
-        <section className='bg-white p-6 rounded-lg shadow-md'>
-          <h3 className='text-lg font-semibold mb-2'>Stats</h3>
-          <p className='text-gray-500'>Coming soon...</p>
+          <h3 className='text-lg font-semibold mb-2'>
+            {role === "UPLOADER" ? "Uploaded Documents" : "Assigned Documents"}
+          </h3>
+          {docs.length === 0 ? (
+            <p className='text-gray-500'>No documents found.</p>
+          ) : (
+            <table className='min-w-full table-auto border-collapse border border-gray-200'>
+              <thead>
+                <tr className='bg-gray-100'>
+                  <th className='border px-4 py-2'>ID</th>
+                  <th className='border px-4 py-2'>File</th>
+                  {role === "SIGNER" && (
+                    <th className='border px-4 py-2'>Uploader</th>
+                  )}
+                  <th className='border px-4 py-2'>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {docs.map((doc) => (
+                  <tr key={doc.id} className='hover:bg-gray-50'>
+                    <td className='border px-4 py-2'>{doc.id}</td>
+                    <td className='border px-4 py-2'>
+                      <a
+                        href={doc.fileUrl}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-blue-600 underline'
+                      >
+                        View
+                      </a>
+                    </td>
+                    {role === "SIGNER" && (
+                      <td className='border px-4 py-2'>
+                        {doc.uploader?.email}
+                      </td>
+                    )}
+                    <td className='border px-4 py-2'>
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${
+                          doc.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : doc.status === "SIGNED"
+                            ? "bg-blue-100 text-blue-800"
+                            : doc.status === "VERIFIED"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {doc.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
       </div>
     </div>

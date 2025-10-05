@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { uploadToCloudinary } from "@/lib/cloudinary";
-import api from "@/lib/api";
 import { useAuth } from "src/context/AuthContext";
+import api from "@/lib/src/api-config";
 
 export default function UploaderPage() {
   const { user, token } = useAuth();
