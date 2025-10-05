@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +10,9 @@ import {
   FieldGroup,
 } from "@/components/ui/field";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLogin } from "src/hooks/useLogin";
 
 export default function LoginForm({
   className,
@@ -19,38 +20,34 @@ export default function LoginForm({
 }: React.ComponentProps<"form">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { mutate: login, isPending, error } = useLogin();
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await axios.post("http://localhost:3000/auth/login", {
-        email,
-        password,
-      });
-      localStorage.setItem("token", res.data.access_token);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
+    login(
+      { email, password },
+      {
+        onSuccess: () => {
+          router.push("/dashboard");
+        },
+      }
+    );
   };
 
   return (
     <div className='grid min-h-svh lg:grid-cols-2'>
       <div className='flex flex-col gap-4 p-6 md:p-10'>
         <div className='flex justify-center gap-2 md:justify-start'>
-          <a href='#' className='flex items-center gap-2 font-medium'>
+          <Link href='/' className='flex items-center gap-2 font-medium'>
             <div className='bg-primary text-primary-foreground flex items-center justify-center rounded-md'>
-              <img src='./favicon.ico' className='w-8 h-8' />
+              <img src='./favicon.ico' className='w-8 h-8' alt='Logo' />
             </div>
             Masst Sign
-          </a>
+          </Link>
         </div>
+
         <div className='flex flex-1 items-center justify-center'>
           <div className='w-full max-w-xs'>
             <form
@@ -65,6 +62,7 @@ export default function LoginForm({
                     Enter your email below to login to your account
                   </p>
                 </div>
+
                 <Field>
                   <FieldLabel htmlFor='email'>Email</FieldLabel>
                   <Input
@@ -76,6 +74,7 @@ export default function LoginForm({
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </Field>
+
                 <Field>
                   <div className='flex items-center'>
                     <FieldLabel htmlFor='password'>Password</FieldLabel>
@@ -94,14 +93,19 @@ export default function LoginForm({
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </Field>
+
                 <Field>
-                  <Button type='submit' disabled={loading}>
-                    {loading ? "Logging in..." : "Login"}
+                  <Button type='submit' disabled={isPending}>
+                    {isPending ? "Logging in..." : "Login"}
                   </Button>
                 </Field>
+
                 {error && (
-                  <p className='text-red-500 text-sm text-center'>{error}</p>
+                  <p className='text-red-500 text-sm text-center'>
+                    {(error as any)?.response?.data?.message || "Login failed"}
+                  </p>
                 )}
+
                 <Field>
                   <FieldDescription className='text-center text-sm'>
                     Don't have an account?{" "}
@@ -118,13 +122,14 @@ export default function LoginForm({
           </div>
         </div>
       </div>
+
       <div className='bg-muted relative hidden lg:flex items-center justify-center'>
         <img
           src='./side.png'
-          alt='Image'
+          alt='Side'
           className='w-max h-max object-contain'
         />
-        <div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/70 via-black/0 to-black/60 rounded-lg'></div>
+        <div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-black/70 via-black/0 to-black/60 rounded-lg' />
       </div>
     </div>
   );

@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +9,17 @@ import {
   FieldDescription,
   FieldGroup,
 } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRegister } from "src/hooks/useRegister";
 
 export default function RegisterForm({
   className,
@@ -19,38 +27,35 @@ export default function RegisterForm({
 }: React.ComponentProps<"form">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [role, setRole] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { mutate: register, isPending, error } = useRegister();
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await axios.post("http://localhost:3000/auth/register", {
-        email,
-        password,
-      });
-      localStorage.setItem("token", res.data.access_token);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Register failed");
-    } finally {
-      setLoading(false);
-    }
+    register(
+      { email, password, role },
+      {
+        onSuccess: () => {
+          router.push("/dashboard"); // redirect after successful registration
+        },
+      }
+    );
   };
 
   return (
     <div className='grid min-h-svh lg:grid-cols-2'>
       <div className='flex flex-col gap-4 p-6 md:p-10'>
         <div className='flex justify-center gap-2 md:justify-start'>
-          <a href='#' className='flex items-center gap-2 font-medium'>
+          <Link href='/' className='flex items-center gap-2 font-medium'>
             <div className='bg-primary text-primary-foreground flex items-center justify-center rounded-md'>
-              <img src='./favicon.ico' className='w-8 h-8' />
+              <img src='./favicon.ico' className='w-8 h-8' alt='Logo' />
             </div>
             Masst Sign
-          </a>
+          </Link>
         </div>
+
         <div className='flex flex-1 items-center justify-center'>
           <div className='w-full max-w-xs'>
             <form
@@ -62,9 +67,10 @@ export default function RegisterForm({
                 <div className='flex flex-col items-center gap-6 text-center'>
                   <h1 className='text-2xl font-bold'>Register</h1>
                   <p className='text-sm text-muted-foreground'>
-                    Enter your email below to register your account
+                    Enter your details to create an account
                   </p>
                 </div>
+
                 <Field>
                   <FieldLabel htmlFor='email'>Email</FieldLabel>
                   <Input
@@ -76,16 +82,22 @@ export default function RegisterForm({
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </Field>
+
                 <Field>
-                  <div className='flex items-center'>
-                    <FieldLabel htmlFor='password'>Password</FieldLabel>
-                    <a
-                      href='#'
-                      className='ml-auto text-sm underline-offset-4 hover:underline'
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
+                  <FieldLabel htmlFor='role'>Role</FieldLabel>
+                  <Select onValueChange={(val) => setRole(val)} value={role}>
+                    <SelectTrigger id='role'>
+                      <SelectValue placeholder='Select your role' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='UPLOADER'>Uploader</SelectItem>
+                      <SelectItem value='SIGNER'>Signer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor='password'>Password</FieldLabel>
                   <Input
                     id='password'
                     type='password'
@@ -94,20 +106,26 @@ export default function RegisterForm({
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </Field>
+
                 <Field>
-                  <Button type='submit' disabled={loading}>
-                    {loading ? "Logging in..." : "Register"}
+                  <Button type='submit' disabled={isPending}>
+                    {isPending ? "Registering..." : "Register"}
                   </Button>
                 </Field>
+
                 {error && (
-                  <p className='text-red-500 text-sm text-center'>{error}</p>
+                  <p className='text-red-500 text-sm text-center'>
+                    {(error as any)?.response?.data?.message ||
+                      "Register failed"}
+                  </p>
                 )}
+
                 <Field>
                   <FieldDescription className='text-center text-sm'>
                     Already have an account?{" "}
                     <Link
                       href='/login'
-                      className='underline underline-offset-4'
+                      className='underline underline-offset-4 hover:text-primary'
                     >
                       Login
                     </Link>
@@ -118,6 +136,7 @@ export default function RegisterForm({
           </div>
         </div>
       </div>
+
       <div className='bg-muted relative hidden lg:flex items-center justify-center'>
         <img
           src='./side.png'
